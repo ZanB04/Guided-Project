@@ -1,12 +1,38 @@
-from flask import Flask, request, jsonify
-from tensorflow.keras.models import load_model
+import dash
+from dash import dcc, html
+import tensorflow as tf
 import numpy as np
-app = Flask(__name__)
-model = load_model("artifacts/student_performance.h5")
-@app.route('/predict', methods = ['POST'])
-def predict():
-    data = request.json['input']
-    prediction = model.predict(np.array([data]))
-    return jsonify({'prediction': prediction.tolist()})
+
+model = tf.keras.models.load_model("artifacts/student_performance.h5")
+app = dash.Dash(__name__)
+app.layout = html.Div([
+    html.H1("BrightPath Student Grade Predictor"),
+    dcc.Input(id = "study-time", type="number", placeholder="StudyTimeWeekly"),
+    dcc.Input(id = "absences", type="number", placeholder="Absences"),
+    dcc.Input(id = "tutoring", type= "number", placeholder="Tutoring (0/1)"),
+    html.Button("Predict", id ="submit"),
+    html.Div(id = "output")
+])
+@app.callback(
+    dash.Output("output", "children"),
+    dash.Input("submit", "n_clicks"),
+    dash.State("study-time", "value"),
+    dash.State("absences", "value"),
+    dash.State("tutoring", "value")
+)
+def predict_grade(n, study, absn, tutor):
+    if n:
+        input_data = np.array([[study, absn, tutor]])
+        prediction = model.predict(input_data)
+        predicted_class = np.argmax(prediction)
+        grade_mapping = {
+            0: 'A',
+            1: 'B',
+            2: 'C',
+            3: 'D',
+            4: 'F'
+        }
+        return f"Predicted grade: {grade_mapping[predicted_class]}."
+    return ""
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run_server(debug = True)
