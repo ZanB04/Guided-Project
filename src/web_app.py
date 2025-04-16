@@ -2,30 +2,37 @@ import dash
 from dash import dcc, html
 import tensorflow as tf
 import numpy as np
+import pandas as pd
 import os
 
 model = tf.keras.models.load_model("artifacts/student_performance.h5")
+train_mean = pd.read_csv("artifacts/train_mean.csv", index_col=0).squeeze("columns")
+train_std = pd.read_csv("artifacts/train_std.csv", index_col=0).squeeze("columns")
 app = dash.Dash(__name__)
 server = app.server
+feature_names = [
+    "Age", "Gender", "Ethnicity", "ParentalEducation",
+    "StudyTimeWeekly", "Absences", "Tutoring", "ParentalSupport",
+    "Extracurricular", "Sports", "Music", "Volunteering", "GPA"
+]
 app.layout = html.Div([
     html.H1("BrightPath Student Grade Predictor"),
-    dcc.Input(id = "study-time", type="number", placeholder="StudyTimeWeekly"),
-    dcc.Input(id = "absences", type="number", placeholder="Absences"),
-    dcc.Input(id = "tutoring", type= "number", placeholder="Tutoring (0/1)"),
+    *[dcc.Input(id=feature.lower(), type="number", placeholder=feature, style={'margin': '5px'}) for feature in feature_names],
     html.Button("Predict", id ="submit"),
     html.Div(id = "output")
 ])
 @app.callback(
     dash.Output("output", "children"),
     dash.Input("submit", "n_clicks"),
-    dash.State("study-time", "value"),
-    dash.State("absences", "value"),
-    dash.State("tutoring", "value")
+    [dash.State(feature.lower(), "value") for feature in feature_names]
 )
-def predict_grade(n, study, absn, tutor):
-    if n:
-        input_data = np.array([[study, absn, tutor]])
-        prediction = model.predict(input_data)
+def predict_grade(n_clicks, *inputs):
+    if n_clicks:
+        if None in inputs:
+            return "Please fill in all input fields."
+        input_data = pd.DataFrame([inputs], columns=feature_names)
+        input_scaled = (input_data - train_mean)/train_std
+        prediction = model.predict(input_scaled)
         predicted_class = np.argmax(prediction)
         grade_mapping = {
             0: 'A',
