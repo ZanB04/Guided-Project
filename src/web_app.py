@@ -36,6 +36,7 @@ def predict_grade(n, study, absn, tutor):
         return f"Predicted grade: {grade_mapping[predicted_class]}."
     return ""
 if __name__ == '__main__':
+    server = app.server
     port = os.getenv('PORT', 8050)
     app.run_server(debug = True, host = '0.0.0.0', port = port)
-    server = app.server
+    
