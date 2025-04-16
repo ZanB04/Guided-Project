@@ -2,6 +2,7 @@ import dash
 from dash import dcc, html
 import tensorflow as tf
 import numpy as np
+import os
 
 model = tf.keras.models.load_model("artifacts/student_performance.h5")
 app = dash.Dash(__name__)
@@ -35,5 +36,6 @@ def predict_grade(n, study, absn, tutor):
         return f"Predicted grade: {grade_mapping[predicted_class]}."
     return ""
 if __name__ == '__main__':
-    app.run_server(debug = True)
+    port = os.getenv('PORT', 8050)
+    app.run_server(debug = True, host = '0.0.0.0', port = port)
     server = app.server
