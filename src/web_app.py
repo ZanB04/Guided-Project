@@ -6,6 +6,7 @@ import os
 
 model = tf.keras.models.load_model("artifacts/student_performance.h5")
 app = dash.Dash(__name__)
+server = app.server
 app.layout = html.Div([
     html.H1("BrightPath Student Grade Predictor"),
     dcc.Input(id = "study-time", type="number", placeholder="StudyTimeWeekly"),
@@ -36,7 +37,6 @@ def predict_grade(n, study, absn, tutor):
         return f"Predicted grade: {grade_mapping[predicted_class]}."
     return ""
 if __name__ == '__main__':
-    server = app.server
     port = os.getenv('PORT', 8050)
     app.run_server(debug = True, host = '0.0.0.0', port = port)
     
