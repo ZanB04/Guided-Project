@@ -5,12 +5,12 @@ import numpy as np
 import pandas as pd
 import os
 
-interpreter = tf.lite.Interpreter("../artifacts/student_performance.tflite")
+interpreter = tf.lite.Interpreter("artifacts/student_performance.tflite")
 interpreter.allocate_tensors()
 input_details = interpreter.get_input_details()
 output_details = interpreter.get_output_details()
-train_mean = pd.read_csv("../artifacts/train_mean.csv", index_col=0).squeeze("columns")
-train_std = pd.read_csv("../artifacts/train_std.csv", index_col=0).squeeze("columns")
+train_mean = pd.read_csv("artifacts/train_mean.csv", index_col=0).squeeze("columns")
+train_std = pd.read_csv("artifacts/train_std.csv", index_col=0).squeeze("columns")
 app = dash.Dash(__name__)
 server = app.server
 feature_names = [
