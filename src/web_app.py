@@ -5,7 +5,10 @@ import numpy as np
 import pandas as pd
 import os
 
-model = tf.keras.models.load_model("../artifacts/student_performance.tflite")
+interpreter = tf.lite.Interpreter("../artifacts/student_performance.tflite")
+interpreter.allocate_tensors()
+input_details = interpreter.get_input_details()
+output_details = interpreter.get_output_details()
 train_mean = pd.read_csv("../artifacts/train_mean.csv", index_col=0).squeeze("columns")
 train_std = pd.read_csv("../artifacts/train_std.csv", index_col=0).squeeze("columns")
 app = dash.Dash(__name__)
@@ -17,7 +20,14 @@ feature_names = [
 ]
 app.layout = html.Div([
     html.H1("BrightPath Student Grade Predictor"),
-    *[dcc.Input(id=feature.lower(), type="number", placeholder=feature, style={'margin': '5px'}) for feature in feature_names],
+    *[dcc.Input(
+        id=feature.lower(), 
+        type="number", 
+        placeholder=feature, 
+        style={'margin': '5px'}
+        ) 
+        for feature in feature_names
+        ],
     html.Button("Predict", id ="submit"),
     html.Div(id = "output")
 ])
@@ -32,8 +42,11 @@ def predict_grade(n_clicks, *inputs):
             return "Please fill in all input fields."
         input_data = pd.DataFrame([inputs], columns=feature_names)
         input_scaled = (input_data - train_mean)/train_std
-        prediction = model.predict(input_scaled)
-        predicted_class = np.argmax(prediction)
+        input_array = np.array(input_scaled, dtype=np.float32)
+        interpreter.set_tensor(input_details[0]['index'], input_array)
+        interpreter.invoke()
+        output_data = interpreter.get_tensor(output_details[0]['index'])
+        predicted_class = np.argmax(output_data)
         grade_mapping = {
             0: 'A',
             1: 'B',
