@@ -5,9 +5,9 @@ import numpy as np
 import pandas as pd
 import os
 
-model = tf.keras.models.load_model("artifacts/student_performance.h5")
-train_mean = pd.read_csv("artifacts/train_mean.csv", index_col=0).squeeze("columns")
-train_std = pd.read_csv("artifacts/train_std.csv", index_col=0).squeeze("columns")
+model = tf.keras.models.load_model("../artifacts/student_performance.tflite")
+train_mean = pd.read_csv("../artifacts/train_mean.csv", index_col=0).squeeze("columns")
+train_std = pd.read_csv("../artifacts/train_std.csv", index_col=0).squeeze("columns")
 app = dash.Dash(__name__)
 server = app.server
 feature_names = [
